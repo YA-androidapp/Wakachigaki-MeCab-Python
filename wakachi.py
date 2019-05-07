@@ -21,8 +21,8 @@ os.chdir(scrpath)
 input_file  = 'input.txt'
 output_file = 'output_' + nowts + '.txt'
 
-wakachiSep = " ";
-labelSep = " ";
+wakachiSep = ' '
+labelSep = ' '
 
 
 def formFilter(res):
