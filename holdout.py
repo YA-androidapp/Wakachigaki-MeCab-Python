@@ -16,6 +16,9 @@ os.chdir(scrpath)
 input_dirname = 'input'
 log_file = 'log_{}.txt'.format(datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
 
+labelSep = ' '
+labelPrefix = '__label__'
+
 # 訓練データ、検証データ、テストデータをこのディレクトリに出力
 output_dirname = 'holdout'
 
@@ -24,9 +27,9 @@ output_validate_suffix = 'validate.txt' # 検証データ
 output_test_suffix     = 'test.txt'     # テストデータ
 
 # 訓練データ、検証データ、テストデータに振り分ける割合(和が1でなくてもよい)
-ratio_train = 0.06
-ratio_validate = 0.02
-ratio_test = 0.02
+ratio_train = 0.6
+ratio_validate = 0.2
+ratio_test = 0.2
 
 
 def main():
@@ -43,7 +46,7 @@ def main():
     with open(os.path.join(scrpath, output_dirname, log_file), 'a', encoding="utf-8") as fo:
         for file in files:
             print(
-                '  {:.2%} {}\n'.format(
+                '  {:.2%} {}'.format(
                     (count_originalfile/len(files)),
                     os.path.basename(file)
                     ), end='', file=fo)
@@ -52,22 +55,30 @@ def main():
                 with open(file, encoding="utf-8") as fi:
                     line = fi.readline().rstrip('\r\n')
                     while line:
+                        rnd = random.random()
                         print(
-                            '  {:.2%} {} {} {}\n'.format(
+                            '  {:.2%} {} {} {:.4} {}'.format(
                                 (count_originalfile/len(files)),
                                 count_line,
                                 datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),
+                                rnd,
                                 str(line)
                                 ), end='', file=fo)
 
-                        if random.random() <= ratio_train:
-                            with open(os.path.join(scrpath, output_dirname, os.path.basename(file) + '.' + output_train_suffix), 'a', encoding="utf-8") as ftrain:
+                        if line.startswith(labelPrefix):
+                            labels = [i for i in line.split(labelSep) if i.startswith(labelPrefix)]
+                            labelsStr = ''.join(labels)
+                        fname, fext = os.path.splitext(os.path.basename(file))
+                        newname = labelsStr if labelsStr else fname
+
+                        if rnd <= ratio_train:
+                            with open(os.path.join(scrpath, output_dirname, newname + '.' + output_train_suffix), 'a', encoding="utf-8") as ftrain:
                                 print(line, end='', file=ftrain)
-                        elif random.random() <= ratio_train + ratio_validate:
-                            with open(os.path.join(scrpath, output_dirname, os.path.basename(file) + '.' + output_validate_suffix), 'a', encoding="utf-8") as fvalidate:
+                        elif rnd <= ratio_train + ratio_validate:
+                            with open(os.path.join(scrpath, output_dirname, newname + '.' + output_validate_suffix), 'a', encoding="utf-8") as fvalidate:
                                 print(line, end='', file=fvalidate)
-                        elif random.random() <= ratio_train + ratio_validate + ratio_test:
-                            with open(os.path.join(scrpath, output_dirname, os.path.basename(file) + '.' + output_test_suffix), 'a', encoding="utf-8") as ftest:
+                        elif rnd <= ratio_train + ratio_validate + ratio_test:
+                            with open(os.path.join(scrpath, output_dirname, newname + '.' + output_test_suffix), 'a', encoding="utf-8") as ftest:
                                 print(line, end='', file=ftest)
                         else:
                             pass
